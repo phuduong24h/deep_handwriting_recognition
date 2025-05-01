@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nhận diện thuốc</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      h1 {
+        color: #333;
+      }
+      input[type="file"] {
+        margin: 10px 0;
+      }
+      .result {
+        margin-top: 20px;
+      }
+      .result h2 {
+        color: #007bff;
+      }
+      .result p {
+        font-size: 16px;
+      }
+      img {
+        max-width: 100%;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Nhận diện thuốc từ ảnh</h1>
+    <form action="/upload" method="POST" enctype="multipart/form-data">
+      <label for="file">Chọn ảnh thuốc:</label>
+      <input type="file" name="file" id="file" required />
+      <button type="submit">Tải lên</button>
+    </form>
+
+    {% if drug_name %}
+    <div class="result">
+      <h2>Thuốc nhận diện: {{ drug_name }}</h2>
+      <p><strong>Phân loại:</strong> {{ category }}</p>
+      <p><strong>Công dụng:</strong> {{ drug_info }}</p>
+      <img
+        src="{{ url_for('static', filename='uploads/' + image_file) }}"
+        alt="Ảnh thuốc"
+      />
+    </div>
+    {% endif %}
+  </body>
+</html>
