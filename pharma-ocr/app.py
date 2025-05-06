@@ -50,7 +50,6 @@ def classify_text(text):
     best_match_index = np.argmax(similarity_scores)
     best_match = training_texts[best_match_index]
 
-    # Chỉ trả về kết quả có độ tương đồng trên 50%
     if max_score >= 0.8:
         predicted_class = 'Thuốc'
     elif max_score >= 0.5:
@@ -60,14 +59,14 @@ def classify_text(text):
 
     return predicted_class, max_score, best_match
 
-# Truy xuất hoạt chất từ best match
+# Truy xuất hoạt chất
 def get_hoat_chat(ten_thuoc):
     matches = thuoc_df[thuoc_df["Tên thuốc"].str.lower().str.strip() == ten_thuoc.strip().lower()]
     if not matches.empty:
         return matches.iloc[0]["Hoạt chất"]
     return ""
 
-# Truy xuất công dụng từ hoạt chất
+# Truy xuất công dụng
 def get_cong_dung(hoat_chat):
     if not hoat_chat:
         return ""
@@ -98,13 +97,15 @@ def save_to_excel(text, category, excel_path='thuoc_detected.xlsx'):
 def process_image_for_text(image_path, gui_output):
     recognized_text = tesseract(image_path)
     lines = recognized_text.split('\n')
+    found = False  # Kiểm tra xem có dòng nào hợp lệ hay không
+
     for line in lines:
         if not line.strip():
             continue
         category, score, best_match = classify_text(line)
         
-        # Chỉ xử lý các dòng có độ tương đồng >= 50%
         if score >= 0.5:
+            found = True
             hoat_chat = get_hoat_chat(best_match)
             cong_dung = get_cong_dung(hoat_chat)
 
@@ -114,7 +115,6 @@ def process_image_for_text(image_path, gui_output):
             if cong_dung:
                 result_msg += f" | Điều trị: {cong_dung}"
 
-            # Hiển thị kết quả lên GUI
             if category == 'Thuốc':
                 gui_output.insert(tk.END, result_msg + "\n", 'green')
             elif category == 'Gần giống':
@@ -122,12 +122,15 @@ def process_image_for_text(image_path, gui_output):
             else:
                 gui_output.insert(tk.END, result_msg + "\n", 'black')
 
-            # Lưu kết quả vào Excel nếu là thuốc
             save_message = save_to_excel(line, category)
             gui_output.insert(tk.END, save_message + "\n")
             gui_output.yview(tk.END)
 
-# Mở webcam
+    if not found:
+        gui_output.insert(tk.END, "⚠️ Không có tên thuốc nào trong ảnh.\n", 'red')
+        gui_output.yview(tk.END)
+
+# Mở webcam và nhận diện ảnh
 def show_webcam(gui_output):
     camera = cv2.VideoCapture(0)
     if not camera.isOpened():
@@ -152,7 +155,7 @@ def show_webcam(gui_output):
     camera.release()
     cv2.destroyAllWindows()
 
-# GUI
+# GUI chính
 def create_gui():
     window = tk.Tk()
     window.title("🧪 Nhận diện thuốc từ ảnh")
@@ -168,6 +171,6 @@ def create_gui():
 
     window.mainloop()
 
-# Chạy
+# Chạy chương trình
 if __name__ == "__main__":
     create_gui()
